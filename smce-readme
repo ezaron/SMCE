@@ -52,4 +52,4 @@ Create the repo at github https://github.com/ezaron/SMCE.git
 On ebi:
 create a fossil repo under SMCE/fossil
 cd SMCE/fossil
-fossil git export /home/ezaron/SMCE/git-mirror --autopush https://ezaron:password@github.com/ezaron/SMCE.git
+fossil git export /home/ezaron/SMCE/git-mirror --autopush https://token@github.com/ezaron/SMCE.git
