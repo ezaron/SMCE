@@ -48,3 +48,8 @@ Felix says there is a 10GB quota.
 Looks like my downloads were interrupted. I did not hit quota.
 
 Experiment with github to mirror a fossil repo.
+Create the repo at github https://github.com/ezaron/SMCE.git
+On ebi:
+create a fossil repo under SMCE/fossil
+cd SMCE/fossil
+fossil git export /home/ezaron/SMCE/git-mirror --autopush https://ezaron:password@github.com/ezaron/SMCE.git
