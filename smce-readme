@@ -1,0 +1,50 @@
+
+Login at NASA Daskhub http://dh.eis-sealevel.mysmce.com/
+
+Settings:Text Editor Keymap: set to emacs
+
+Close any open tabs to make the Launcher appear. Choose the Terminal.
+
+Edit .bashrc and .profile to set the PATH.
+export PATH=/home/jovyan/opt/bin:${PATH}
+
+mkdir -p /opt/src
+cd opt/src
+wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz
+tar -xvzf julia-1.7.3-linux-x86_64.tar.gz
+cd
+mkdir -p opt/bin
+ln -s /home/jovyan/opt/src/julia-1.7.3/bin/julia /home/jovyan/opt/bin
+
+julia
+using Pkg
+Pkg.add("IJulia")
+Now, when you open the Launcher tab, the Julia 1.7.3 option is shown.
+
+Open a Julia notebook or use the terminal to run the julia interpreter:
+Getting the prerequisites:
+using Pkg
+Pkg.add.(["netCDF", "ColorSchemes", "Interpolations", "Makie"])
+-- hmmm. Seems to be very slow.
+run(`pwd`)
+using NetCDF
+using Makie
+x = collect(0:0.01:2*pi)
+lines(x,cos.(x))
+-- Seems to work!
+-- See https://makie.juliaplots.org/stable/tutorials/basic-tutorial/
+
+Put datafiles in opt/data
+HRET_v8.1_compressed.nc
+HRET_v8.1_modes.nc
+GEBCO_gridone_distance_to_coastline_v2.0m.nc
+WOA2020_SKn.nc
+HRET_v8.1.nc
+-- Takes a long time to upload. Is there any way to go direct from
+drive.google.com?
+
+Hmmm. Network error. It says my server is unavailable.
+Felix says there is a 10GB quota.
+Looks like my downloads were interrupted. I did not hit quota.
+
+Experiment with github to mirror a fossil repo.
