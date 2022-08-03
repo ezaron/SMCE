@@ -53,3 +53,26 @@ On ebi:
 create a fossil repo under SMCE/fossil
 cd SMCE/fossil
 fossil git export /home/ezaron/SMCE/git-mirror --autopush https://token@github.com/ezaron/SMCE.git
+Seems to work! Hooray.
+
+Try to get rclone binary and see if you can use it copy files from drive.google.com.
+In JupyterLab Terminal:
+cd
+cd opt/src
+curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
+unzip rclone-current-linux-amd64.zip
+rm rclone-current-linux-amd64.zip
+cd rclone-*-linux-amd64
+ln -s /home/jovyan/opt/src/rclone-v1.59.0-linux-amd64/rclone /home/jovyan/opt/bin
+
+Hmmm. Try this:
+#!/bin/bash
+fileid="5b0b7d5d-128c-4210-9ea3-5000f276d629"
+html=`curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}"`
+curl -Lb ./cookie "https://drive.google.com/uc?export=download&`echo ${html}|grep -Po '(confirm=[a-zA-Z0-9\-_]+)'`&id=${fileid}" -o ${filename}
+I can't seem to find the fileid in the shareable url.
+
+Continue with rclone setup:
+Upload ebi:.config/rclone/rclone.conf to /home/jovyan/.config/rclone/rclone.conf
+rclone copy gdrive:public/HRET_v8.1_compressed.nc .
+Seems to work!
