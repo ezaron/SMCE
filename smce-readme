@@ -54,6 +54,7 @@ create a fossil repo under SMCE/fossil
 cd SMCE/fossil
 fossil git export /home/ezaron/SMCE/git-mirror --autopush https://token@github.com/ezaron/SMCE.git
 Seems to work! Hooray.
+Note: "fossil git export" is needed to sync the repo. The autopush does not seem to work.
 
 Try to get rclone binary and see if you can use it copy files from drive.google.com.
 In JupyterLab Terminal:
@@ -75,4 +76,12 @@ I can't seem to find the fileid in the shareable url.
 Continue with rclone setup:
 Upload ebi:.config/rclone/rclone.conf to /home/jovyan/.config/rclone/rclone.conf
 rclone copy gdrive:public/HRET_v8.1_compressed.nc .
+rclone copy gdrive:public/GEBCO_gridone_distance_to_coastline_v2.0m.nc .
 Seems to work!
+
+According to Denis, there is a 10GB quota for ordinary users. Need to talk to Jinbo, eventually, about the
+larger files.
+
+Next:
+ - get a sample altimeter file and make HRET predictions.
+ - email Denis about east/west DaskHub stuff
