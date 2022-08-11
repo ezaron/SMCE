@@ -123,7 +123,7 @@ hpred = zeros(size(lon))
 # Unwrap longitude into [0,360] if needed:
 lonx = copy(lon)
 indw = find( x -> x < 0.0,lonx)
-lonx[indw] = lon[indx] .+ 360.0
+lonx[indw] = lon[indw] .+ 360.0
 for cid = cidvec
     println("Working on cid = ",cid)
     ic = cid * "re"
@@ -179,23 +179,73 @@ minimum(checkval - hpred) #  0.2mm
 tmp = split(infile,".")
 tmp[end] = "_hret.nc"
 fout = reduce(*,tmp)
-nccreate(fout,"hret",
-         "longitude",lon,
-         "latitude",lat,
-         atts=Dict("longname" => "predicted internal tide sea level anomaly",
-                   "units" => "meter"),
-         gatts=Dict("creator" => "Software written by Edward D. Zaron, 2022-08-10.",
-                    "contact" => "edward.d.zaron@oregonstate.edu",
-                    "cidvec"  => cidvec,
-                    "project" => "NASA SWOT Science Team",
-                    "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout dde20225c3ed7e3364ffc282ff53b4832980c930",
-                    "version" => "1.0",
-                    "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE"
-                    "infile"  => infile,
-                    "outfile" => outfile,
-                    "fhret"   => fhret
-                    )
-         )
-ncwrite(hpred,fout,"hret")
+run(`rm -f $fout`)
 
-         
+if (length(size(lon)) == 2)
+    num_pixels,num_lines = size(lon)
+    
+    nccreate(fout,"hret",
+             "num_pixels",num_pixels,
+             "num_lines",num_lines,
+             atts=Dict("longname" => "predicted internal tide sea level anomaly",
+                       "units" => "meter"),
+             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2022-08-10.",
+                        "contact" => "edward.d.zaron@oregonstate.edu",
+                        "cidvec"  => cidvec,
+                        "project" => "NASA SWOT Science Team",
+                        "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout dde20225c3ed7e3364ffc282ff53b4832980c930",
+                        "version" => "1.0",
+                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE checkout d43216f1d9981b2fd151404ecce38a9220a4f6ce",
+                        "infile"  => infile,
+                        "outfile" => fout,
+                        "fhret"   => fhret
+                        )
+             )
+    nccreate(fout,"longitude",
+             "num_pixels",
+             "num_lines",
+             atts=Dict("longname" => "longitude, copied from infile")
+             )
+    nccreate(fout,"latitude",
+             "num_pixels",
+             "num_lines",
+             atts=Dict("longname" => "latitude, copied from infile")
+             )
+
+    ncwrite(lon,fout,"longitude")
+    ncwrite(lat,fout,"latitude")
+    ncwrite(hpred,fout,"hret")
+    ncsync()
+end
+
+if (length(size(1)) == 1)
+    nccreate(fout,"hret",
+             "time",time,Dict("note" => "copied from input file"),
+             atts=Dict("longname" => "predicted internal tide sea level anomaly",
+                       "units" => "meter"),
+             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2022-08-10.",
+                        "contact" => "edward.d.zaron@oregonstate.edu",
+                        "cidvec"  => cidvec,
+                        "project" => "NASA SWOT Science Team",
+                        "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout dde20225c3ed7e3364ffc282ff53b4832980c930",
+                        "version" => "1.0",
+                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE checkout d43216f1d9981b2fd151404ecce38a9220a4f6ce",
+                        "infile"  => infile,
+                        "outfile" => fout,
+                        "fhret"   => fhret
+                        )
+             )
+    nccreate(fout,"longitude",
+             "time",
+             atts=Dict("longname" => "longitude, copied from infile")
+             )
+    nccreate(fout,"latitude",
+             "time",
+             atts=Dict("longname" => "latitude, copied from infile")
+             )
+
+    ncwrite(lon,fout,"longitude")
+    ncwrite(lat,fout,"latitude")
+    ncwrite(hpred,fout,"hret")
+    ncsync()
+end
