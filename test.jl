@@ -9,7 +9,7 @@ catch
 end
 using Interpolations
 using ColorSchemes
-using ElectronDisplay
+#using ElectronDisplay
 using CairoMakie
 #using GLMakie  ?
 #using WGLMakie ?
@@ -227,9 +227,9 @@ if (length(size(1)) == 1)
                         "contact" => "edward.d.zaron@oregonstate.edu",
                         "cidvec"  => cidvec,
                         "project" => "NASA SWOT Science Team",
-                        "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout dde20225c3ed7e3364ffc282ff53b4832980c930",
+                        "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout 1f4512dbcc1140befa49a475d221344a55dc83b0581e5def8006e1ef0c197379",
                         "version" => "1.0",
-                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE checkout d43216f1d9981b2fd151404ecce38a9220a4f6ce",
+                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE",
                         "infile"  => infile,
                         "outfile" => fout,
                         "fhret"   => fhret
