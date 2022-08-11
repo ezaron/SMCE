@@ -1,12 +1,15 @@
 
 module HAmod
 # To use these functions:
-#include("/home/ezaron/NASA-Tides/iho/iho_func.jl")
-# using .HAmod
+#    include("/home/ezaron/NASA-Tides/iho/iho_func.jl")
+#    using .HAmod
+#
 # Remember: You can access the non-exported functions and data
 #           structures using their full names, i.e., to get the
 #           big list of Doodson numbers, use "HAmod.CID".
 
+# This list of modules could be trimmed for use in the SMCE script if we
+# need to speed up the startup time of the script:
 using DelimitedFiles
 using LinearAlgebra
 using Statistics
@@ -42,7 +45,6 @@ catch
     # println("iho_func.jl failed to define gethostname2!")
 end
 
-export isloaded
 function isloaded()
     return true
 end

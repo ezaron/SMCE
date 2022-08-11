@@ -1,15 +1,18 @@
 # Usage:
-#    julia test.jl [filename.nc | filename.txt]
-#    If filename.nc is passed in, then we compute baroclinic
-#    tide SLA predictions and write them in a file called filename_hret.nc.
-#    If filename.txt is passed in, then we treat the contents of filename.txt
-#    as a list of files and generate predictions, as above.
+#    julia test.jl PATHSPEC
+#    (1) If PATHSPEC ends in .nc (i.e., if it is the full path to a netcdf file)
+#        then we compute baroclinic tide SLA predictions and write them in a file 
+#        called PATHSPEC_hret.nc.
+#    (2) If PATHSPEC ends in .txt then we treat the contents of PATHSPEC
+#        as a list of files and generate predictions, as above.
+#    (3) If PATHSPEC ends in "/" then we compute tide predictions for all
+#        the files with names ending in .nc in this directory, as above.
 #
 #    This program attempts to read and parse your input files to extract
 #    the latitude, longitude, and time at which predictions are requested.
 #    It has enough logic to handle cases, such as in the simulated SWOT
 #    data files, where the two-dimensional (latitude,longitude) arrays
-#    must be matched with the one-dimensional time array.
+#    must be matched with a one-dimensional time array.
 #
 #    The most important thing you must check, as a user, is that the
 #    reference time for the time variable has been parsed correctly.
@@ -17,20 +20,21 @@
 #    to the console and also included on the figures output by this
 #    program.
 
-# Just load the needed components:
+# Load the needed components:
 include("edznc.jl")
 try
-    period("M2")
+    HAmod.isloaded()
 catch
     include("./HAmod.jl")
     using .HAmod
 end
 using Interpolations
-using ColorSchemes
+#using ColorSchemes
 #using ElectronDisplay
 using CairoMakie
 using Printf
 using Base.GC
+using Statistics
 
 # Open window and draw figures or not:
 FIG=true
@@ -40,9 +44,21 @@ SFIG=true
 DEST="./Figures/"
 if (SFIG) run(`mkdir -p $DEST`) ; end
 
-# Input file containing lat, lon, time:
-#infile = "SWOT_L2_LR_SSH_Expert_018_063_20150404T095346_20150404T104512_DG10_01.nc"
-infile = "/home/jovyan/DEMO_FILES/SWOT_L2_LR_SSH_Expert_001_004_20140412T143420_20140412T152546_DG10_01.nc"
+function main(pathspec)
+    
+    println("pathspec = ",pathspec)
+    if (string(pathspec[end]) == "/")
+        infiles = readdir(pathspec)
+        scat(x::String,y::String)=x * y
+        infiles = scat.(pathspec,infiles)
+    elseif (string(pathspec[end-2:end]) == ".nc")
+        infiles = [ pathspec ]
+    elseif (string(pathspec[end-4:end]) == ".txt")
+        infiles = readlines(pathspec)
+    else
+        println("Cannot parse commandline argument. See comments at the top of ./test.jl.")
+        exit()
+    end
 
 # List the tidal frequencies you want to predict. This is largest set:
 #cidvec = ["M2", "S2", "K1", "O1", "MA2", "MB2"]
@@ -51,6 +67,14 @@ cidvec = ["M2", "S2", "K1", "O1"] # For checking with precomputed values in the 
 lonVars = ["longitude", "lon"]
 latVars = ["latitude", "lat"]
 timeVars = ["time"]
+
+for infile=infiles
+    println("Trying to process infile = ",infile)
+    m = match(r".nc",infile)
+    if isnothing(m) continue ; end
+    m = match(r"_hret.nc",infile)
+    if !isnothing(m) continue ; end
+
 lon = ncvarget(infile,lonVars)
 lat = ncvarget(infile,latVars)
 time = ncvarget(infile,timeVars)
@@ -77,21 +101,21 @@ end
 ymd=match(r"(....)-(..)-(..)",tunits)
 hms=match(r"(..):(..):(..)",tunits)
 if (isnothing(hms))
-    global dayfrac = 0.0
+    dayfrac = 0.0
 else
     try
         hr = parse(Float64,hms[1])
         mi = parse(Float64,hms[2])
         se = parse(Float64,hms[3])
-        global dayfrac = (hr + (mi + se/60.0)/60.0)/24.0
+        dayfrac = (hr + (mi + se/60.0)/60.0)/24.0
     catch
         println("ERROR: Could not parse the reference time of the input file: bad HH:MM:SS.")
     end
 end
 try
-    global yy = parse(Float64,ymd[1])
-    global mm = parse(Float64,ymd[2])
-    global dd = parse(Float64,ymd[3])
+    yy = parse(Float64,ymd[1])
+    mm = parse(Float64,ymd[2])
+    dd = parse(Float64,ymd[3])
 catch
     println("ERROR: Could not parse the reference time of the input file: bad or missing YYYY-MM-DD.")
 end
@@ -111,17 +135,21 @@ println(stop_str)
 # the start and end times on the plot.
 
 rank=length(size(lon))
-f = Figure(resolution=(360,180))
+
+f = Figure(resolution=(600,300))
 ax = Axis(f[1, 1],
           xlabel="longitude",
           ylabel="latitude",
           title="data locations")
 if (rank == 2)
-    lines!(ax, lon[1,:], lat[1,:])
-    lines!(ax, lon[end,:], lat[end,:])
-    lines!(ax, lon[:,1], lat[:,1])
-    lines!(ax, lon[:,end], lat[:,end])
-    if (prod(size(lon)) < 10000)
+    #lines!(ax, lon[1,:], lat[1,:])
+    #lines!(ax, lon[end,:], lat[end,:])
+    #lines!(ax, lon[:,1], lat[:,1])
+    #lines!(ax, lon[:,end], lat[:,end])
+    xx = [lon[:,1] ; lon[end,:] ; reverse(lon[:,end]) ; reverse(lon[1,:])]
+    yy = [lat[:,1] ; lat[end,:] ; reverse(lat[:,end]) ; reverse(lat[1,:])]
+    lines!(ax,xx,yy,color=:black)
+    if (prod(size(lon)) < 1000)
         n,m=size(lon)
         for j=1:m
             scatter!(ax,lon[:,j],lat[:,j])
@@ -132,13 +160,26 @@ elseif (rank == 1)
 else
     println("Not sure how to show (lat,lon). Skipping graphics.")
 end
-f
+text!(ax,start_str,position=(10,60),align=(:left,:center))
+text!(ax,stop_str,position=(10,30),align=(:left,:center))
+if (FIG)
+    display(f)
+end
+if (SFIG)
+    tmp = split(infile,"/")
+    tmp = tmp[end]
+    tmp = split(tmp,".")
+    tmp[end] = ".pdf"
+    fout = reduce(*,tmp)
+    println("Saving graphics at ",fout)
+    save(DEST * fout,f)
+end
 
 # Note how we force time to look like a 1-d vector even if it is
 # a matrix:
 indu = find(!isnan,time)
-iid,F = FMAT(time[indu],cidvec,1,0) # Contains nodal correction
-# iid,F = FMAT(time[indu],cidvec,0,0) # Without nodal correction
+# iid,F = FMAT(time[indu],cidvec,1,0) ; println("nodal modulation is turned ON (most accurate, but worse agreement with checkval)")
+ iid,F = FMAT(time[indu],cidvec,0,0) ;  println("nodal modulation is turned OFF (less accurate, but better agreement with checkval)")
 
 # Load data for each component frequency one at a time:
 #fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
@@ -193,7 +234,6 @@ println("DONE!")
 println("Writing results to file.")
 
 checkval = ncvarget(infile,"internal_tide_hret")
-using Statistics
 std(checkval) # 3mm
 # Hmmm. The errors are little larger than I would have expected:
 std(checkval - hpred) # 0.1mm
@@ -205,6 +245,9 @@ maximum(checkval - hpred) #  0.2mm
 minimum(checkval - hpred) #  0.2mm
 # Seems like the difference is plausibly related to the quantization
 # error in the compressed HRET file Remko used.
+println("MAXIMUM error compared to checkval [mm] = ",1e3*maximum(abs.(checkval - hpred)))
+println("This should be less than 0.1 mm when nodal modulation is turned off.")
+println("It could be more than a 1 mm when the nodal modulation is turned on.")
 
 tmp = split(infile,".")
 tmp[end] = "_hret.nc"
@@ -284,4 +327,33 @@ if (length(size(1)) == 1)
     ncsync()
 end
 GC.gc()
-println("Output file has been written. This script is done!")
+    
+end # infile = infiles
+
+end # main()
+
+# Determine if we are running from the Terminal or if we are
+# running inside a Notebook
+println("ARGS = ",ARGS)
+if (length(ARGS) == 0)
+    # We are running inside a Terminal, and no commandline arguments were specified, so we use a sample file:
+    pathspec = "/home/jovyan/DEMO_FILES/SWOT_L2_LR_SSH_Expert_001_004_20140412T143420_20140412T152546_DG10_01.nc"   
+elseif (length(ARGS) == 1)
+    m = match(r"\.json",ARGS[1])
+    if (!isnothing(m))
+        # We are running inside a Notebook, no commandline arguments are used, we just set the filename as above:
+        pathspec = "/home/jovyan/DEMO_FILES/SWOT_L2_LR_SSH_Expert_001_004_20140412T143420_20140412T152546_DG10_01.nc"   
+    else
+        # We are running inside a Terminal, and a commandline argument was specified:
+        pathspec = ARGS[1]
+    end
+else
+    println("Could not determine if we are running in a Terminal or Notebook. See comments at the top of ./test.jl.")
+    exit()
+end
+
+main(pathspec)
+println("Output files have been written. This script is done!")
+if (length(ARGS) > 1)
+    exit()
+end
