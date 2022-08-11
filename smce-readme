@@ -1,4 +1,23 @@
 
+2022-08-11:
+Aha -- even though I can mirror my fossil repo to github, I don't think I
+can push changes and propagate them back into fossil easily. Thus, for
+my own development, I need fossil inside the SMCE, but I can point others
+to the git repo as needed.
+
+Install fossil in my SMCE:opt/bin/
+
+Also -- I keep getting hung up not being able to cut-and-paste among
+windows as I would like. Is there an emacs-nox binary I can put in the
+VM? ... not easily. Would need to assemble all the libraries in a common
+directory and then build a static version myself.
+
+WGLMakie in Jupyter: very slow and ends in complaint about unable to connect to web server.
+CairoMakie in Jupyter: Seems to work fine, if a little slow.
+
+
+
+2022-08-05:
 Login at NASA Daskhub http://dh.eis-sealevel.mysmce.com/
 
 Settings:Text Editor Keymap: set to emacs
@@ -85,3 +104,4 @@ larger files.
 Next:
  - get a sample altimeter file and make HRET predictions.
  - email Denis about east/west DaskHub stuff
+

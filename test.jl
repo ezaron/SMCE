@@ -30,11 +30,13 @@ catch
 end
 using Interpolations
 #using ColorSchemes
-#using ElectronDisplay
 using CairoMakie
 using Printf
 using Base.GC
 using Statistics
+if (gethostname() == "ebi")
+    using ElectronDisplay
+end
 
 # Open window and draw figures or not:
 FIG=true
@@ -182,8 +184,11 @@ indu = find(!isnan,time)
  iid,F = FMAT(time[indu],cidvec,0,0) ;  println("nodal modulation is turned OFF (less accurate, but better agreement with checkval)")
 
 # Load data for each component frequency one at a time:
-#fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
-fhret = "/home/jovyan/opt/data/HRET_v8.1_compressed.nc"
+    if (gethostname() == "ebi")
+        fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
+    else
+        fhret = "/home/jovyan/opt/data/HRET_v8.1_compressed.nc"
+    end
 hlon = ncvarget(fhret,"longitude")
 hlat = ncvarget(fhret,"latitude")
 hpred = zeros(size(lon))
@@ -258,9 +263,14 @@ run(`rm -f $fout`)
 # many fewer variables. Seems like it would be nice to copy the compression and stuff from the input file,
 # but maybe it would be easiest write the new fields into the infile.
 
+if (gethostname() == "ebi")
+    ncsync()
+    ncclose()
+end
+
 if (length(size(lon)) == 2)
     num_pixels,num_lines = size(lon)
-    
+
     nccreate(fout,"hret",
              "num_pixels",num_pixels,
              "num_lines",num_lines,
