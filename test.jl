@@ -1,3 +1,21 @@
+# Usage:
+#    julia test.jl [filename.nc | filename.txt]
+#    If filename.nc is passed in, then we compute baroclinic
+#    tide SLA predictions and write them in a file called filename_hret.nc.
+#    If filename.txt is passed in, then we treat the contents of filename.txt
+#    as a list of files and generate predictions, as above.
+#
+#    This program attempts to read and parse your input files to extract
+#    the latitude, longitude, and time at which predictions are requested.
+#    It has enough logic to handle cases, such as in the simulated SWOT
+#    data files, where the two-dimensional (latitude,longitude) arrays
+#    must be matched with the one-dimensional time array.
+#
+#    The most important thing you must check, as a user, is that the
+#    reference time for the time variable has been parsed correctly.
+#    The start and end times in YYYY-MM-DD HH:MM:SS format are output
+#    to the console and also included on the figures output by this
+#    program.
 
 # Just load the needed components:
 include("edznc.jl")
@@ -14,6 +32,14 @@ using CairoMakie
 #using GLMakie  ?
 #using WGLMakie ?
 using Printf
+
+# Open window and draw figures or not:
+FIG=true
+# Save hard-copies of figures or not:
+SFIG=true
+# Directory for saving figures, if they are saved:
+DEST="./Figures/"
+if (SFIG) run(`mkdir -p $DEST`) ; end
 
 # Input file containing lat, lon, time:
 infile = "SWOT_L2_LR_SSH_Expert_018_063_20150404T095346_20150404T104512_DG10_01.nc"
