@@ -4,7 +4,7 @@ include("edznc.jl")
 try
     period("M2")
 catch
-    include("/home/ezaron/NASA-Tides/iho/iho_func.jl")
+    include("./HAmod.jl")
     using .HAmod
 end
 using Interpolations
@@ -195,7 +195,7 @@ if (length(size(lon)) == 2)
                         "project" => "NASA SWOT Science Team",
                         "history" => "Based on https://ingria.ceoas.oregonstate.edu/fossil/HA checkout dde20225c3ed7e3364ffc282ff53b4832980c930",
                         "version" => "1.0",
-                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE checkout d43216f1d9981b2fd151404ecce38a9220a4f6ce",
+                        "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE",
                         "infile"  => infile,
                         "outfile" => fout,
                         "fhret"   => fhret
