@@ -137,3 +137,39 @@ function ncgetatt(fin,vars::Array{String,1},att)
     println("  att = ",att)
     return nothing
 end
+
+function plotcoast(ax,lon=360,clr=:black,fn="./globe.txt",lw=0.5)
+    # A plotcoast for Makie:
+    pm180=true
+    if (maximum(lon) > 180)
+        pm180=false
+    end
+    x = zeros(10000)
+    y = zeros(10000)
+    k = 0
+    # The coastline file was created with gmt:
+    # gmt pscoast -Rg -Dh -W -M > globe.txt
+    # From within julia you could generate it locally with something like this:
+    # cmd = @sprintf("gmt pscoast -R%f/%f/%f/%f -Dh -W -M > globe.txt", ... )
+    for line in eachline(fn)
+        if (line[1] == '>')
+            if (k > 0)
+                if (pm180)
+                    lines!(ax,x[1:k],y[1:k],color=clr,linewidth=lw)
+                else
+                    xx = x[1:k]
+                    ind = find( x -> x < 0.0 , xx )
+                    lines!(ax,xx[ind].+360,y[ind],color=clr,linewidth=lw)
+                    ind = find( x -> x > 0.0 , xx )
+                    lines!(ax,xx[ind],y[ind],color=clr,linewidth=lw)
+                end
+                k=0
+            end
+        else
+            k=k+1
+            x[k],y[k] = parse.(Float64,split(line,"\t"))
+        end
+    end
+#    display(p)
+    return
+end

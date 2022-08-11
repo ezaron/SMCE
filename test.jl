@@ -48,7 +48,7 @@ if (SFIG) run(`mkdir -p $DEST`) ; end
 
 function main(pathspec)
     
-    println("pathspec = ",pathspec)
+#    println("pathspec = ",pathspec)
     if (string(pathspec[end]) == "/")
         infiles = readdir(pathspec)
         scat(x::String,y::String)=x * y
@@ -164,6 +164,7 @@ else
 end
 text!(ax,start_str,position=(10,60),align=(:left,:center))
 text!(ax,stop_str,position=(10,30),align=(:left,:center))
+plotcoast(ax)
 if (FIG)
     display(f)
 end
@@ -263,14 +264,10 @@ run(`rm -f $fout`)
 # many fewer variables. Seems like it would be nice to copy the compression and stuff from the input file,
 # but maybe it would be easiest write the new fields into the infile.
 
-if (gethostname() == "ebi")
-    ncsync()
-    ncclose()
-end
-
 if (length(size(lon)) == 2)
     num_pixels,num_lines = size(lon)
 
+    println("Attempting to create this file: ",fout)
     nccreate(fout,"hret",
              "num_pixels",num_pixels,
              "num_lines",num_lines,
@@ -344,7 +341,7 @@ end # main()
 
 # Determine if we are running from the Terminal or if we are
 # running inside a Notebook
-println("ARGS = ",ARGS)
+#println("ARGS = ",ARGS)
 if (length(ARGS) == 0)
     # We are running inside a Terminal, and no commandline arguments were specified, so we use a sample file:
     pathspec = "/home/jovyan/DEMO_FILES/SWOT_L2_LR_SSH_Expert_001_004_20140412T143420_20140412T152546_DG10_01.nc"   
