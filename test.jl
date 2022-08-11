@@ -29,9 +29,8 @@ using Interpolations
 using ColorSchemes
 #using ElectronDisplay
 using CairoMakie
-#using GLMakie  ?
-#using WGLMakie ?
 using Printf
+using Base.GC
 
 # Open window and draw figures or not:
 FIG=true
@@ -42,7 +41,9 @@ DEST="./Figures/"
 if (SFIG) run(`mkdir -p $DEST`) ; end
 
 # Input file containing lat, lon, time:
-infile = "SWOT_L2_LR_SSH_Expert_018_063_20150404T095346_20150404T104512_DG10_01.nc"
+#infile = "SWOT_L2_LR_SSH_Expert_018_063_20150404T095346_20150404T104512_DG10_01.nc"
+infile = "/home/jovyan/DEMO_FILES/SWOT_L2_LR_SSH_Expert_001_004_20140412T143420_20140412T152546_DG10_01.nc"
+
 # List the tidal frequencies you want to predict. This is largest set:
 #cidvec = ["M2", "S2", "K1", "O1", "MA2", "MB2"]
 cidvec = ["M2", "S2", "K1", "O1"] # For checking with precomputed values in the file.
@@ -76,9 +77,7 @@ end
 ymd=match(r"(....)-(..)-(..)",tunits)
 hms=match(r"(..):(..):(..)",tunits)
 if (isnothing(hms))
-    hr = 0.0
-    mi = 0.0
-    se = 0.0
+    global dayfrac = 0.0
 else
     try
         hr = parse(Float64,hms[1])
@@ -142,7 +141,8 @@ iid,F = FMAT(time[indu],cidvec,1,0) # Contains nodal correction
 # iid,F = FMAT(time[indu],cidvec,0,0) # Without nodal correction
 
 # Load data for each component frequency one at a time:
-fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
+#fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
+fhret = "/home/jovyan/opt/data/HRET_v8.1_compressed.nc"
 hlon = ncvarget(fhret,"longitude")
 hlat = ncvarget(fhret,"latitude")
 hpred = zeros(size(lon))
@@ -187,7 +187,11 @@ for cid = cidvec
         end
     end
 end
-    
+GC.gc()
+println("DONE!")
+
+println("Writing results to file.")
+
 checkval = ncvarget(infile,"internal_tide_hret")
 using Statistics
 std(checkval) # 3mm
@@ -206,6 +210,10 @@ tmp = split(infile,".")
 tmp[end] = "_hret.nc"
 fout = reduce(*,tmp)
 run(`rm -f $fout`)
+
+# Hmmm. For the SWOT examples, the output file is considerably larger than the input file, even though it has
+# many fewer variables. Seems like it would be nice to copy the compression and stuff from the input file,
+# but maybe it would be easiest write the new fields into the infile.
 
 if (length(size(lon)) == 2)
     num_pixels,num_lines = size(lon)
@@ -275,3 +283,5 @@ if (length(size(1)) == 1)
     ncwrite(hpred,fout,"hret")
     ncsync()
 end
+GC.gc()
+println("Output file has been written. This script is done!")
