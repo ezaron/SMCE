@@ -41,7 +41,7 @@ Email the author: [Edward D. Zaron](mailto:edward.d.zaron@oregonstate.edu)
 
 Read about tide model: [Baroclinic Tidal Sea Level from Exact-Repeat Altimetry](http://dx.doi.org/10.1175/JPO-D-18-0127.1)
 
-Learn about tides and tidal analysis: [Coastal Tides](https://diffusion.shom.fr/pro/coastal-tides-version-anglaise-de-la-maree-oceanique-cotiere.html) by Bernard Simon.
+Learn about tides and tidal analysis: [Coastal Tides](http://refmar.shom.fr/sea_level_news_2013/2013_t4/ouvage-reference-sur-theorie-et-pratique-maree-francais-et-anglais) by Bernard Simon.
 
 ## Quickstart
 
