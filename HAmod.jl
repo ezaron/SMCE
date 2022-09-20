@@ -88,13 +88,24 @@ for HAroot in HAroots
 end
 if (isnothing(CID))
     println("HAmod is using a minimal set of Doodson numbers defined inline.")
-    # Just define what is needed for HRET8.1:
-    CID = ["O1"  ,"13.943 036", "1 455 554", "A YZZ ZZY", "y",
-           "K1"  ,"15.041 069", "1 655 556", "A AZZ ZZA", "y",
-           "MA2" ,"28.943 036", "2 545 555", "B ZYZ ZZZ", "m",
-           "M2"  ,"28.984 104", "2 555 555", "B ZZZ ZZZ", "y",
-           "MB2" ,"29.025 173", "2 565 555", "B ZAZ ZZZ", "m",
-           "S2"  ,"30.000 000", "2 735 555", "B BXZ ZZZ", "z" ]
+    CID = [
+        "Sa"  , "0.041 069", "0 565 555", "Z ZAZ ZZZ", "z",
+        "Xa"  , "0.041 069", "---------", "Z ZAB ZZZ", "z",
+        "Ssa" , "0.082 137", "0 575 555", "Z ZBZ ZZZ", "z",
+        "Xsa" , "0.082 137", "---------", "Z ZBB ZZZ", "z",
+        "Xm"  , "0.471 521", "---------", "Z AVA ZZZ", "x",
+        "MSm" , "0.471 521", "0 636 555", "Z AXA ZZZ", "x",
+        "Mm"  , "0.544 375", "0 654 555", "Z AZY ZZZ", "y",
+        "Xf"  , "1.015 896", "---------", "Z BUZ ZZZ", "b",
+        "MSf" , "1.015 896", "0 735 555", "Z BXZ ZZZ", "b",
+        "X2"  , "2.031 792", "---------", "Z DTZ ZZZ", "c",
+        "2SM" , "2.031 792", "0 915 555", "Z DVZ ZZZ", "c",
+        "O1"  ,"13.943 036", "1 455 554", "A YZZ ZZY", "y",
+        "K1"  ,"15.041 069", "1 655 556", "A AZZ ZZA", "y",
+        "MA2" ,"28.943 036", "2 545 555", "B ZYZ ZZZ", "m",
+        "M2"  ,"28.984 104", "2 555 555", "B ZZZ ZZZ", "y",
+        "MB2" ,"29.025 173", "2 565 555", "B ZAZ ZZZ", "m",
+        "S2"  ,"30.000 000", "2 735 555", "B BXZ ZZZ", "z" ]
     CID = permutedims(reshape(CID,(5,6)),(2,1))
 end
 
