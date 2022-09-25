@@ -188,7 +188,7 @@ indu = find(!isnan,time)
     if (gethostname() == "ebi")
         fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
     else
-        fhret = "/home/jovyan/opt/data/HRET_v8.1_compressed.nc"
+        fhret = "/efs/SWOT_shared/data/HRET/HRET_v8.1_compressed.nc"
     end
 hlon = ncvarget(fhret,"longitude")
 hlat = ncvarget(fhret,"latitude")
@@ -359,7 +359,9 @@ else
     exit()
 end
 
-main(pathspec)
+#main(pathspec)
+main("/home/jovyan/DEMO_FILES/")
+
 println("Output files have been written. This script is done!")
 if (length(ARGS) > 1)
     exit()
