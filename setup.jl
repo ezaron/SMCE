@@ -1,7 +1,7 @@
 
 using Pkg
 Pkg.add.([
-        "IJulia"
+        "IJulia",
         "NetCDF",
         "Interpolations",
         "ColorSchemes",
