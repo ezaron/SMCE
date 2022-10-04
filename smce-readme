@@ -1,4 +1,22 @@
 
+2022-10-02:
+
+ Setting up for better testing:
+     - ./SMCE/ : My fossil version-controlled checkout.
+       Use ./SMCE-git/ for testing.
+     FOR TESTING:
+       Open a fresh Terminal:
+       cd
+       rm -rf ./SMCE-git
+       git clone https://github.com/ezaron/SMCE.git SMCE-git
+       export PATH=/home/jovyan/opt/bin:${PATH}
+       cd SMCE-git
+       julia setup.jl
+       Double-click the Example.ipynb file.
+       The output shown in this window is stale when it opens.
+       crtl-RET the executable lines.
+       
+
 2022-08-11:
 Aha -- even though I can mirror my fossil repo to github, I don't think I
 can push changes and propagate them back into fossil easily. Thus, for
