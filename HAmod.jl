@@ -106,7 +106,7 @@ if (isnothing(CID))
         "M2"  ,"28.984 104", "2 555 555", "B ZZZ ZZZ", "y",
         "MB2" ,"29.025 173", "2 565 555", "B ZAZ ZZZ", "m",
         "S2"  ,"30.000 000", "2 735 555", "B BXZ ZZZ", "z" ]
-    CID = permutedims(reshape(CID,(5,6)),(2,1))
+    CID = permutedims(reshape(CID,(5,17)),(2,1))
 end
 
 NM   = 1
