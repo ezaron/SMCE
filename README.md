@@ -71,9 +71,15 @@ export PATH=/home/jovyan/opt/bin:${PATH}
 julia ./setup.jl
 ```
 
+- Populate a directory with a sample data file:
+```
+mkdir /home/jovyan/DEMO_FILES
+cp /efs/SWOT_shared/data/SWOT_SIMULATED_L2_KARIN_SSH_ECCO_LLC4320_SCIENCE_V1/SWOT_L2_LR_SSH_Expert_018_290_20121112T003212_20121112T012339_DG10_01.nc /home/jovyan/DEMO_FILES/
+```
+
 ### Options for using the software:
 
-- Open the .ipynb in this directory, and launch an interactive session.
+- Open the .ipynb in this directory, and launch an interactive session. This will generate predictions for the files under /home/jovyan/DEMO_FILES/.
 
 - Open a Terminal and run the software, `julia ./test.jl <PATHSPEC>`.
 
@@ -93,6 +99,8 @@ julia test.jl <PATHSPEC>
    
 3. If _PATHSPEC_ ends in "/" then we compute tide predictions for all
    the files with names ending in ".nc" in this directory, as above.
+
+4. If _PATHSPEC_ is omitted, then the default value is used, _PATHSPEC=/home/jovyan/DEMO_FILES/_.
 
 This program will generate the output files, mentioned above, in addition to simple plots
 of the input coordinates (latitude,longitude), useful for basic sanity checking.
