@@ -59,7 +59,7 @@ cd opt/src
 wget https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.0-linux-x86_64.tar.gz
 tar -xvzf julia-1.8.0-linux-x86_64.tar.gz
 mkdir -p opt/bin
-mv julia-1.8.0/bin/julia ../bin
+ln -s /home/jovyan/opt/src/julia-1.8.0/bin/julia /home/jovyan/opt/bin
 export PATH=/home/jovyan/opt/bin:${PATH}
 ```
 
@@ -118,3 +118,11 @@ reference time for the time variable has been parsed correctly.
 The start and end times of each input file, in YYYY-MM-DD HH:MM:SS
 format, are output to the console and also included on the figures
 created by this program.
+
+### FAQ:
+
+1. I installed it and it doesn't work. Now what?
+
+I do not completely understand the file system inside the SMCE virtual machines. Please check that your
+home directory is at /home/jovyan, and verify that you have write permission to create the `opt/bin` and `.julia`
+directories. Also, please double-check the path to `DEMO_FILES` agrees with the code and filesystem.
