@@ -113,7 +113,7 @@ function ncvarget(fin,vars::Array{String,1})
     for v=vars
         try
             var=ncvarget(fin,v)
-            return var
+            return var,v
         catch
         end
     end

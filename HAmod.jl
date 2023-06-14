@@ -102,11 +102,12 @@ if (isnothing(CID))
         "2SM" , "2.031 792", "0 915 555", "Z DVZ ZZZ", "c",
         "O1"  ,"13.943 036", "1 455 554", "A YZZ ZZY", "y",
         "K1"  ,"15.041 069", "1 655 556", "A AZZ ZZA", "y",
+        "N2"  ,"28.439 730", "2 456 555", "B YZA ZZZ", "m",
         "MA2" ,"28.943 036", "2 545 555", "B ZYZ ZZZ", "m",
         "M2"  ,"28.984 104", "2 555 555", "B ZZZ ZZZ", "y",
         "MB2" ,"29.025 173", "2 565 555", "B ZAZ ZZZ", "m",
         "S2"  ,"30.000 000", "2 735 555", "B BXZ ZZZ", "z" ]
-    CID = permutedims(reshape(CID,(5,17)),(2,1))
+    CID = permutedims(reshape(CID,(5,18)),(2,1))
 end
 
 NM   = 1
@@ -999,6 +1000,7 @@ function nodalJ1(pak)
     nodef = 1.1029 .+ 0.1676*cosN .- 0.0170*cos2N .+ 0.0016*cos3N
     return nodef,nodeu
 end
+
 
 function nodalM2(pak)
     (cosp,sinp,

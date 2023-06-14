@@ -3,52 +3,63 @@
 
 ### What is this software?
 
-This software is used to predict the sea surface-height anomaly associated with the
+This software is used to predict the sea surface-height anomaly or ocean surface
+current associated with the
 baroclinic (internal) tide. The user inputs a filename containing a list of
 longtiude, latitude, time coordinates, and the software will output the predicted
-tidal elevation from the HRET 8.1 baroclinic tide model. For detailed usage
-instructions, see below.
+tidal elevation and current from the HRET14 baroclinic tide model. Input files in different formats
+are supported (RADS, SWOT, and GDP), and these provide a range of examples for other
+format specifications.
+For detailed usage instructions, see below.
 
 ### Who is this software for?
 
-This software is useful for researchers who would like to predict baroclinic sea
-level anomaly or baroclinic surface pressure associated with the main ocean
-tides, M2, S2, K1, and O1, as well as the annual modulates of M2, denoted
-MA2 and MB2. The predictions are based on a model for the phase-locked tides
-inferred from the 30-year record of satellite altimetry. Thus, the predictions
+This software is for researchers who would like to predict baroclinic sea
+level anomaly (baroclinic surface pressure) or baroclinic surface currents
+associated with the ocean tides, M2, S2, N2, K1, and O1.
+The predictions are based on a model for the phase-locked tides
+obtained by mapping historical satellite altimeter data and
+hourly velocity estimates from surface drifters. Thus, the predictions
 will not include modulations related to refraction or other interactions
-with mesoscale processes, the so-called non-phase-locked, nonstationary, or
-incoherent tide. The amplitude of the non-phase-locked tide is thought to
+with mesoscale processes, the so-called non-phase-locked or nonstationary tide.
+The amplitude of the non-phase-locked tide is thought to
 exceed the phase-locked tide throughout the tropics, so the predictions
-offered by this program may differ by several centimeters from the true baroclinic
-sea level anomaly at a particular instant.
+offered by this program may differ considerably from the actual baroclinic
+sea level anomaly at any particular instant.
 
 ### What is the status of this software?
 
-This software is under development. The prediction of tidal sea surface-height anomaly
+This software is under development. The prediction of tidal sea level anomaly
 is routine, but I expect to add new capabilities for predicting subsurface
-properties (i.e., tidal currents and density anomalies). The main limitation at the moment
-is the provisioning of enough space in the cloud for the input data files. Roughly 10GB are
-required to store the vertical modes and other information needed to convert HRET 8.1 into
-subsurface predictions.
+properties (i.e., tidal currents and density anomalies).
 
 ### How to get more information?
 
 Email the author: [Edward D. Zaron](mailto:edward.d.zaron@oregonstate.edu)
 
-Read about HRET 8.1: [Baroclinic Tidal Sea Level from Exact-Repeat Altimetry](http://dx.doi.org/10.1175/JPO-D-18-0127.1)
+Read about the previous version of HRET (version 8.1): [Baroclinic Tidal Sea Level from Exact-Repeat Altimetry](http://dx.doi.org/10.1175/JPO-D-18-0127.1)
 
 Learn about tides and tidal analysis: [Coastal Tides](http://refmar.shom.fr/sea_level_news_2013/2013_t4/ouvage-reference-sur-theorie-et-pratique-maree-francais-et-anglais) by Bernard Simon.
 
-## Quickstart
+## Quickstart for the NASA/JPL SMCE cloud environment
 
 ### Installation
 
 - Login to the SMCE cloud environment (Jupyterlab).
 
-- Open a Terminal and checkout this software:
+- Checkout the most recent version of this software and data files:
+```
+fossil clone https://ingria.ceoas.oregonstate.edu/fossil/SMCE
+```
+
+- Alternately, if you already have the HRET14 data files, you may grab the source code
+from github. Open a Terminal and checkout this software:
 ```
 git clone https://github.com/ezaron/SMCE.git SMCE
+```
+The HRET14 data files are located at
+```
+https://ingria.ceoas.oregonstate.edu/fossil/SMCE/dir?ci=tip&name=HRET14
 ```
 
 - Open a Terminal and install the Julia language:
@@ -71,7 +82,10 @@ export PATH=/home/jovyan/opt/bin:${PATH}
 julia ./setup.jl
 ```
 
-- Populate a directory with a sample data file:
+- Move the sample data files into place. The sample data files are located in the './SWOTdata', './RADSdata', and './GDPdata'
+directories of the fossil repository, 'https://ingria.ceoas.oregonstate.edu/fossil/SMCE/dir?ci=tip'.
+
+Within the SMCE environment the sample files can be copied into your user directory as follows:
 ```
 mkdir /home/jovyan/DEMO_FILES
 cp /efs/SWOT_shared/data/SWOT_SIMULATED_L2_KARIN_SSH_ECCO_LLC4320_SCIENCE_V1/SWOT_L2_LR_SSH_Expert_018_290_20121112T003212_20121112T012339_DG10_01.nc /home/jovyan/DEMO_FILES/
@@ -92,7 +106,8 @@ julia test.jl <PATHSPEC>
 ```
 1. If _PATHSPEC_ ends in ".nc" (i.e., if it is the full path to a NetCDF file)
    then we compute baroclinic tide SLA predictions and write them in a file 
-   called `PATHSPEC_hret.nc`.
+   called `PATHSPEC_hret.nc`. The SWOT sample data, RADS passfile, and GDP data
+   file formats are currently supported.
    
 2. If _PATHSPEC_ ends in ".txt" then we treat the contents of _PATHSPEC_
    as a list of files and generate predictions, as above.
@@ -116,8 +131,8 @@ must be matched with a one-dimensional time array.
 The most important thing to verify, as a user, is that the
 reference time for the time variable has been parsed correctly.
 The start and end times of each input file, in YYYY-MM-DD HH:MM:SS
-format, are output to the console and also included on the figures
-created by this program.
+format, are output to the console for you to check. The times are also
+written prominently on the figures created by this program.
 
 ### FAQ:
 
