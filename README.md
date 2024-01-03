@@ -1,5 +1,5 @@
 
-## Cloud-Based Tide Prediction Software
+## HRET14 Tide Prediction Software
 
 ### What is this software?
 
@@ -8,7 +8,7 @@ current associated with the
 baroclinic (internal) tide. The user inputs a filename containing a list of
 longtiude, latitude, time coordinates, and the software will output the predicted
 tidal elevation and current from the HRET14 baroclinic tide model. Input files in different formats
-are supported (RADS, SWOT, and GDP), and these provide a range of examples for other
+are supported (RADS, SWOT, and GDP), but the user can modify these for other input
 format specifications.
 For detailed usage instructions, see below.
 
@@ -20,28 +20,20 @@ associated with the ocean tides, M2, S2, N2, K1, and O1.
 The predictions are based on a model for the phase-locked tides
 obtained by mapping historical satellite altimeter data and
 hourly velocity estimates from surface drifters. Thus, the predictions
-will not include modulations related to refraction or other interactions
-with mesoscale processes, the so-called non-phase-locked or nonstationary tide.
-The amplitude of the non-phase-locked tide is thought to
-exceed the phase-locked tide throughout the tropics, so the predictions
-offered by this program may differ considerably from the actual baroclinic
-sea level anomaly at any particular instant.
-
-### What is the status of this software?
-
-This software is under development. The prediction of tidal sea level anomaly
-is routine, but I expect to add new capabilities for predicting subsurface
-properties (i.e., tidal currents and density anomalies).
+will not include modulations related to time-variable
+refraction or other interactions with the environment.
 
 ### How to get more information?
 
 Email the author: [Edward D. Zaron](mailto:edward.d.zaron@oregonstate.edu)
 
+Read about the development of HRET14: [manuscript in review at JTech](https://oregonstate.box.com/s/gssl5uqysucqw2f3q7tfkzylpijba2ny)
+
 Read about the previous version of HRET (version 8.1): [Baroclinic Tidal Sea Level from Exact-Repeat Altimetry](http://dx.doi.org/10.1175/JPO-D-18-0127.1)
 
 Learn about tides and tidal analysis: [Coastal Tides](http://refmar.shom.fr/sea_level_news_2013/2013_t4/ouvage-reference-sur-theorie-et-pratique-maree-francais-et-anglais) by Bernard Simon.
 
-## Quickstart for the NASA/JPL SMCE cloud environment
+## Quickstart for a cloud environment or Linux commandline installation
 
 ### Installation
 
@@ -83,7 +75,7 @@ julia ./setup.jl
 ```
 
 - Move the sample data files into place. The sample data files are located in the './SWOTdata', './RADSdata', and './GDPdata'
-directories of the fossil repository, 'https://ingria.ceoas.oregonstate.edu/fossil/SMCE/dir?ci=tip'.
+directories of this [fossil repository](https://ingria.ceoas.oregonstate.edu/fossil/SMCE/dir?ci=tip)
 
 Within the SMCE environment the sample files can be copied into your user directory as follows:
 ```
@@ -132,12 +124,4 @@ The most important thing to verify, as a user, is that the
 reference time for the time variable has been parsed correctly.
 The start and end times of each input file, in YYYY-MM-DD HH:MM:SS
 format, are output to the console for you to check. The times are also
-written prominently on the figures created by this program.
-
-### FAQ:
-
-1. I installed it and it doesn't work. Now what?
-
-I do not completely understand the file system inside the SMCE virtual machines. Please check that your
-home directory is at /home/jovyan, and verify that you have write permission to create the `opt/bin` and `.julia`
-directories. Also, please double-check the path to `DEMO_FILES` agrees with the code and filesystem.
+written prominently on the sample figures created by this program.
