@@ -1,5 +1,18 @@
+#
+# This program generates baroclinic tide predictions for lat/lon/time
+# coordinates provided in netcdf files. The predictions consist of the
+# baroclinic sea level anomaly, eastward surface current, and westward
+# surface current. The HRET14 empirical tide model is the basis for
+# these predictions. This model consists of gridded maps of sea level
+# anomaly for the M2, S2, K1, O1, and N2 tides. The surface currents
+# are derived from the sea level anomaly using a linear momentum balance.
+#
+# Sample data files are provided under the ./SWOTdata/, ./RADSdata/, and
+# ./GDPdata directories.
+#
 # Usage:
 #    julia test.jl PATHSPEC
+#    (0) The parser fails if PATHSPEC begins with ".". Use full path instead.
 #    (1) If PATHSPEC ends in .nc (i.e., if it is the full path to a netcdf file)
 #        then we compute baroclinic tide SLA predictions and write them in a file 
 #        called PATHSPEC_hret.nc.
@@ -19,6 +32,9 @@
 #    The start and end times in YYYY-MM-DD HH:MM:SS format are output
 #    to the console and also included on the figures output by this
 #    program.
+#
+# edward.d.zaron@oregonstate.edu
+#
 
 # Load the needed components:
 include("edznc.jl")
@@ -39,9 +55,11 @@ if (gethostname() == "ebi")
 end
 
 # Open window and draw figures or not:
-FIG=true
+#FIG=true
+FIG=false
 # Save hard-copies of figures or not:
-SFIG=true
+#SFIG=true
+SFIG=false
 # Directory for saving figures, if they are saved:
 DEST="./Figures/"
 if (SFIG) run(`mkdir -p $DEST`) ; end
@@ -62,13 +80,18 @@ function main(pathspec)
         exit()
     end
 
-# List the tidal frequencies you want to predict. This is largest set:
-#cidvec = ["M2", "S2", "K1", "O1", "MA2", "MB2"]
-cidvec = ["M2", "S2", "K1", "O1"] # For checking with precomputed values in the file.
+    # List the tidal frequencies you want to predict. This is largest set:
+    #cidvec = ["M2", "S2", "K1", "O1", "MA2", "MB2"] # HRET8.1
+    cidvec = ["M2", "S2", "K1", "O1", "N2"] # HRET14
+#    cidvec = ["M2"]
+#    cidvec = ["S2"]
+#    cidvec = ["K1"]
+#    cidvec = ["O1"]
+#    cidvec = ["M2", "S2", "K1", "O1"] # HRET8.1
 
-lonVars = ["longitude", "lon"]
-latVars = ["latitude", "lat"]
-timeVars = ["time"]
+lonVars = ["longitude", "lon", "LON"]
+latVars = ["latitude", "lat", "LAT"]
+timeVars = ["time", "TIME"]
 
 for infile=infiles
     println("Trying to process infile = ",infile)
@@ -77,17 +100,16 @@ for infile=infiles
     m = match(r"_hret.nc",infile)
     if !isnothing(m) continue ; end
 
-lon = ncvarget(infile,lonVars)
-lat = ncvarget(infile,latVars)
-time = ncvarget(infile,timeVars)
-tunits = ncgetatt(infile,timeVars,"units")
+lon,lonV = ncvarget(infile,lonVars)
+lat,latV = ncvarget(infile,latVars)
+time,timeV = ncvarget(infile,timeVars)
+tunits = ncgetatt(infile,timeV,"units")
 
 if (size(lon) != size(lat))
     println("ERROR: Sizes on longitude and latitude arrays differ.")
 end
 
 # Try to figure out the units and reference time from tunits:
-tunits = ncgetatt(infile,timeVars,"units")
 # Assume the time unit, e.g., seconds, is the first substring in tunits:
 m=split(tunits," ")[1]
 # Convert time to units of days:
@@ -124,11 +146,14 @@ end
 jd0 = ymd2jd(yy,mm,dd + dayfrac)
 # Convert time to decimal Julian Date which begins at midnight rather than noon:
 time = jd0 .+ time
+indg = find(!isnan,time)
+indgg = find(!isinf,time[indg])
+indg = indg[indgg]
 # Sanity check:
-yy,mm,dd,hr,mi,se = jd2ymdhms(minimum(time))
+yy,mm,dd,hr,mi,se = jd2ymdhms(minimum(time[indg]))
 start_str=@sprintf("First measurement time = %04i-%02i-%02i %02i:%02i:%05.2f",
                    yy,mm,dd,hr,mi,se)
-yy,mm,dd,hr,mi,se = jd2ymdhms(maximum(time))
+yy,mm,dd,hr,mi,se = jd2ymdhms(maximum(time[indg]))
 stop_str=@sprintf("Last measurement time = %04i-%02i-%02i %02i:%02i:%05.2f",
                   yy,mm,dd,hr,mi,se)
 println(start_str)
@@ -138,12 +163,13 @@ println(stop_str)
 
 rank=length(size(lon))
 
+if (FIG)
 f = Figure(resolution=(600,300))
 ax = Axis(f[1, 1],
           xlabel="longitude",
           ylabel="latitude",
           title="data locations")
-if (rank == 2)
+if ( (rank == 2) & (length(time) < 10000) )
     #lines!(ax, lon[1,:], lat[1,:])
     #lines!(ax, lon[end,:], lat[end,:])
     #lines!(ax, lon[:,1], lat[:,1])
@@ -157,15 +183,16 @@ if (rank == 2)
             scatter!(ax,lon[:,j],lat[:,j])
         end
     end
-elseif (rank == 1)
+elseif ( (rank == 1) & (length(time) < 10000) )
     lines!(ax, lon, lat)
+elseif (rank == 1)
+    lines!(ax, lon[1:100:end], lat[1:100:end])    
 else
     println("Not sure how to show (lat,lon). Skipping graphics.")
 end
 text!(ax,start_str,position=(10,60),align=(:left,:center))
 text!(ax,stop_str,position=(10,30),align=(:left,:center))
 plotcoast(ax)
-if (FIG)
     display(f)
 end
 if (SFIG)
@@ -180,39 +207,66 @@ end
 
 # Note how we force time to look like a 1-d vector even if it is
 # a matrix:
-indu = find(!isnan,time)
-# iid,F = FMAT(time[indu],cidvec,1,0) ; println("nodal modulation is turned ON (most accurate, but worse agreement with checkval)")
- iid,F = FMAT(time[indu],cidvec,0,0) ;  println("nodal modulation is turned OFF (less accurate, but better agreement with checkval)")
+indu = find( x -> (!isnan(x)) & (!isinf(x)),time)
+    iid,F = FMAT(time[indu],cidvec,1,0) ; println("nodal modulation is turned ON (most accurate, but worse agreement with checkval)")
+    # iid,F = FMAT(time[indu],cidvec,0,0) ;  println("nodal modulation is turned OFF (less accurate, but better agreement with checkval)")
 
-# Load data for each component frequency one at a time:
-    if (gethostname() == "ebi")
-        fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
-    else
-        fhret = "/efs/SWOT_shared/data/HRET/HRET_v8.1_compressed.nc"
-    end
-hlon = ncvarget(fhret,"longitude")
-hlat = ncvarget(fhret,"latitude")
+    #        fhret = "/home/ezaron/FFTest/HRET8.1/HRET_v8.1.nc"
+    fhret   = "./HRET14/HRET14_SSH_d1.nc"
+    fhretuv = nothing
+    # Uncomment the next line if you would like to predict tidal currents in addition to SSH:
+    fhretuv = "./HRET14/HRET14_UV_d1.nc"
+
+hlon = ncvarget(fhret,"lon")
+hlat = ncvarget(fhret,"lat")
 hpred = zeros(size(lon))
+upred = zeros(size(lon))
+vpred = zeros(size(lon))
 # Unwrap longitude into [0,360] if needed:
 lonx = copy(lon)
 indw = find( x -> x < 0.0,lonx)
 lonx[indw] = lon[indw] .+ 360.0
+# Load data for each component frequency one at a time:    
 for cid = cidvec
     println("Working on cid = ",cid)
-    ic = cid * "re"
-    is = cid * "im"
+    ic = cid * "c"
+    is = cid * "s"
     iic = iid[cid * "c"]
     iis = iid[cid * "s"]
+    # It is possible that loading and building all the interpolators for
+    # ssh, u, and v will consume too much memory. Monitor usage during tests!
     hc = ncvarget(fhret,ic)
     hs = ncvarget(fhret,is)
     ihc = interpolate((hlon,hlat),hc,(Gridded(Linear()),Gridded(Linear())))
     ihs = interpolate((hlon,hlat),hs,(Gridded(Linear()),Gridded(Linear())))
     ehc = extrapolate(ihc,(Periodic(),Flat()))
     ehs = extrapolate(ihs,(Periodic(),Flat()))
+    if !isnothing(fhretuv)
+        uc = ncvarget(fhretuv,"u" * ic)
+        us = ncvarget(fhretuv,"u" * is)
+        iuc = interpolate((hlon,hlat),uc,(Gridded(Linear()),Gridded(Linear())))
+        ius = interpolate((hlon,hlat),us,(Gridded(Linear()),Gridded(Linear())))
+        euc = extrapolate(iuc,(Periodic(),Flat()))
+        eus = extrapolate(ius,(Periodic(),Flat()))
+        vc = ncvarget(fhretuv,"v" * ic)
+        vs = ncvarget(fhretuv,"v" * is)
+        ivc = interpolate((hlon,hlat),vc,(Gridded(Linear()),Gridded(Linear())))
+        ivs = interpolate((hlon,hlat),vs,(Gridded(Linear()),Gridded(Linear())))
+        evc = extrapolate(ivc,(Periodic(),Flat()))
+        evs = extrapolate(ivs,(Periodic(),Flat()))
+    end
     if (size(lon) == size(time))
         xc = ehc.(lonx[indu],lat[indu])
         xs = ehs.(lonx[indu],lat[indu])
         hpred[indu] = hpred[indu] + F[:,iic].*xc + F[:,iis].*xs
+        if !isnothing(fhretuv)
+            xc = euc.(lonx[indu],lat[indu])
+            xs = eus.(lonx[indu],lat[indu])
+            upred[indu] = upred[indu] + F[:,iic].*xc + F[:,iis].*xs
+            xc = evc.(lonx[indu],lat[indu])
+            xs = evs.(lonx[indu],lat[indu])
+            vpred[indu] = vpred[indu] + F[:,iic].*xc + F[:,iis].*xs
+        end
         continue
     end
     # Different cases when size(time) != size(lat)
@@ -223,14 +277,30 @@ for cid = cidvec
                 lon1 = view(lonx,k,:)
                 lat1 = view(lat,k,:)
                 h1   = view(hpred,k,:)
+                if !isnothing(fhretuv)
+                    u1   = view(upred,k,:)
+                    v1   = view(vpred,k,:)
+                end
             else
                 lon1 = view(lonx,:,k)
                 lat1 = view(lat,:,k)
                 h1   = view(hpred,:,k)
+                if !isnothing(fhretuv)
+                    u1   = view(upred,:,k)
+                    v1   = view(vpred,:,k)
+                end
             end
             xc = ehc.(lon1,lat1)
             xs = ehs.(lon1,lat1)
             h1[:] = h1[:] + F[k,iic].*xc + F[k,iis].*xs
+            if !isnothing(fhretuv)
+                xc = euc.(lon1,lat1)
+                xs = eus.(lon1,lat1)
+                u1[:] = u1[:] + F[k,iic].*xc + F[k,iis].*xs
+                xc = evc.(lon1,lat1)
+                xs = evs.(lon1,lat1)
+                v1[:] = v1[:] + F[k,iic].*xc + F[k,iis].*xs
+            end
         end
     end
 end
@@ -239,41 +309,51 @@ println("DONE!")
 
 println("Writing results to file.")
 
-checkval = ncvarget(infile,"internal_tide_hret")
-std(checkval) # 3mm
-# Hmmm. The errors are little larger than I would have expected:
-std(checkval - hpred) # 0.1mm
-maximum(checkval - hpred) #  0.09mm
-minimum(checkval - hpred) # -1.12mm
-# Try turning off the nodal correction:
-std(checkval - hpred) # 0.03mm
-maximum(checkval - hpred) #  0.2mm
-minimum(checkval - hpred) #  0.2mm
-# Seems like the difference is plausibly related to the quantization
-# error in the compressed HRET file Remko used.
-println("MAXIMUM error compared to checkval [mm] = ",1e3*maximum(abs.(checkval - hpred)))
-println("This should be less than 0.1 mm when nodal modulation is turned off.")
-println("It could be more than a 1 mm when the nodal modulation is turned on.")
-
-tmp = split(infile,".")
-tmp[end] = "_hret.nc"
+    if (1 == 0)
+        # Skip the validation test for HRET14 since there are not corresponding values precomputed in the files.
+        checkval = ncvarget(infile,"internal_tide_hret")
+        std(checkval) # 3mm
+        # Hmmm. The errors are little larger than I would have expected:
+        std(checkval - hpred) # 0.1mm
+        maximum(checkval - hpred) #  0.09mm
+        minimum(checkval - hpred) # -1.12mm
+        # Try turning off the nodal correction:
+        std(checkval - hpred) # 0.03mm
+        maximum(checkval - hpred) #  0.2mm
+        minimum(checkval - hpred) #  0.2mm
+        # Seems like the difference is plausibly related to the quantization
+        # error in the compressed HRET file Remko used.
+        println("MAXIMUM error compared to checkval [mm] = ",1e3*maximum(abs.(checkval - hpred)))
+        println("This should be less than 0.1 mm when nodal modulation is turned off.")
+        println("It could be more than a 1 mm when the nodal modulation is turned on.")
+    end
+    
+    tmp = split(infile,".")
+    if (length(cidvec) == 1)
+        tmp[end] = @sprintf("_hret_%s.nc",cidvec[1])
+    else
+        tmp[end] = "_hret.nc"
+    end
 fout = reduce(*,tmp)
 run(`rm -f $fout`)
 
 # Hmmm. For the SWOT examples, the output file is considerably larger than the input file, even though it has
 # many fewer variables. Seems like it would be nice to copy the compression and stuff from the input file,
-# but maybe it would be easiest write the new fields into the infile.
+# but maybe it would be easiest to write the new fields into the infile.
 
 if (length(size(lon)) == 2)
     num_pixels,num_lines = size(lon)
 
     println("Attempting to create this file: ",fout)
+    if isnothing(fhretuv)
+        fhretuv = "nothing"
+    end
     nccreate(fout,"hret",
              "num_pixels",num_pixels,
              "num_lines",num_lines,
-             atts=Dict("longname" => "predicted internal tide sea level anomaly",
+             atts=Dict("long_name" => "predicted internal tide sea level anomaly",
                        "units" => "meter"),
-             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2022-08-10.",
+             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2023-05-26.",
                         "contact" => "edward.d.zaron@oregonstate.edu",
                         "cidvec"  => cidvec,
                         "project" => "NASA SWOT Science Team",
@@ -282,32 +362,53 @@ if (length(size(lon)) == 2)
                         "source"  => "https://ingria.ceoas.oregonstate.edu/fossil/SMCE",
                         "infile"  => infile,
                         "outfile" => fout,
-                        "fhret"   => fhret
+                        "fhret"   => fhret,
+                        "fhretuv" => fhretuv
                         )
              )
-    nccreate(fout,"longitude",
-             "num_pixels",
-             "num_lines",
-             atts=Dict("longname" => "longitude, copied from infile")
-             )
-    nccreate(fout,"latitude",
-             "num_pixels",
-             "num_lines",
-             atts=Dict("longname" => "latitude, copied from infile")
-             )
+    if (fhretuv == "nothing")
+        fhretuv = nothing
+    end
 
-    ncwrite(lon,fout,"longitude")
-    ncwrite(lat,fout,"latitude")
+    if !isnothing(fhretuv)
+        nccreate(fout,"uhret",
+                 "num_pixels",
+                 "num_lines",
+                 atts=Dict("long_name" => "predicted internal tide eastward surface current",
+                           "units" => "meter/second"))
+        nccreate(fout,"vhret",
+                 "num_pixels",
+                 "num_lines",
+                 atts=Dict("long_name" => "predicted internal tide northward surface current",
+                           "units" => "meter/second"))
+    end
+    nccreate(fout,lonV,
+             "num_pixels",
+             "num_lines",
+             atts=Dict("long_name" => "longitude, copied from infile")
+             )
+    nccreate(fout,latV,
+             "num_pixels",
+             "num_lines",
+             atts=Dict("long_name" => "latitude, copied from infile")
+             )
+    
+    ncwrite(lon,fout,lonV)
+    ncwrite(lat,fout,latV)
     ncwrite(hpred,fout,"hret")
+    if !isnothing(fhretuv)
+        ncwrite(upred,fout,"uhret")
+        ncwrite(vpred,fout,"vhret")
+    end
     ncsync()
 end
 
-if (length(size(1)) == 1)
+if (length(size(lon)) == 1)
     nccreate(fout,"hret",
-             "time",time,Dict("note" => "copied from input file"),
-             atts=Dict("longname" => "predicted internal tide sea level anomaly",
+             timeV,time,Dict("note" => "copied from input file"),
+             atts=Dict("long_name" => "predicted internal tide sea level anomaly",
                        "units" => "meter"),
-             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2022-08-10.",
+             gatts=Dict("creator" => "Software written by Edward D. Zaron, 2023-05-26.",
                         "contact" => "edward.d.zaron@oregonstate.edu",
                         "cidvec"  => cidvec,
                         "project" => "NASA SWOT Science Team",
@@ -319,18 +420,34 @@ if (length(size(1)) == 1)
                         "fhret"   => fhret
                         )
              )
-    nccreate(fout,"longitude",
-             "time",
-             atts=Dict("longname" => "longitude, copied from infile")
-             )
-    nccreate(fout,"latitude",
-             "time",
-             atts=Dict("longname" => "latitude, copied from infile")
-             )
 
-    ncwrite(lon,fout,"longitude")
-    ncwrite(lat,fout,"latitude")
+    if !isnothing(fhretuv)
+        nccreate(fout,"uhret",
+                 timeV,
+                 atts=Dict("long_name" => "predicted internal tide eastward surface current",
+                           "units" => "meter/second"))
+        nccreate(fout,"vhret",
+                 timeV,
+                 atts=Dict("long_name" => "predicted internal tide northward surface current",
+                           "units" => "meter/second"))
+    end
+    nccreate(fout,lonV,
+             timeV,
+             atts=Dict("long_name" => "longitude, copied from infile")
+             )
+    nccreate(fout,latV,
+             timeV,
+             atts=Dict("long_name" => "latitude, copied from infile")
+             )
+    
+    # It would be better if I copy the same name as used in the input file:
+    ncwrite(lon,fout,lonV)
+    ncwrite(lat,fout,latV)
     ncwrite(hpred,fout,"hret")
+    if !isnothing(fhretuv)
+        ncwrite(upred,fout,"uhret")
+        ncwrite(vpred,fout,"vhret")
+    end
     ncsync()
 end
 GC.gc()
@@ -359,8 +476,8 @@ else
     exit()
 end
 
-#main(pathspec)
-main("/home/jovyan/DEMO_FILES/")
+main(pathspec)
+#main("/home/jovyan/DEMO_FILES/")
 
 println("Output files have been written. This script is done!")
 if (length(ARGS) > 1)

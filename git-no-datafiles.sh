@@ -6,9 +6,12 @@ cd git-no-datafiles
 git clone https://github.com/ezaron/SMCE.git SMCE
 
 cd SMCE
+cp ../../fossil/test.jl .
+cp ../../fossil/setup.jl .
 cp ../../fossil/edznc.jl .
 cp ../../fossil/HAmod.jl .
 cp ../../fossil/README.md .
+cp ../../fossil/git-no-datafiles.sh .
 
 mkdir HRET14 GDPdata RADSdata SWOTdata
 cp ../../fossil/HRET14/README.md HRET14/
