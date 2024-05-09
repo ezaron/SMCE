@@ -272,7 +272,7 @@ for cid = cidvec
     # Different cases when size(time) != size(lat)
     if (length(size(time)) == 1)
         na,nb=size(lat)
-        for kk=indu
+        for kk=length(indu)
             k=indu[kk]
             if (length(time) == na)
                 lon1 = view(lonx,k,:)
