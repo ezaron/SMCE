@@ -272,7 +272,8 @@ for cid = cidvec
     # Different cases when size(time) != size(lat)
     if (length(size(time)) == 1)
         na,nb=size(lat)
-        for k=indu
+        for kk=indu
+            k=indu[kk]
             if (length(time) == na)
                 lon1 = view(lonx,k,:)
                 lat1 = view(lat,k,:)
@@ -292,14 +293,14 @@ for cid = cidvec
             end
             xc = ehc.(lon1,lat1)
             xs = ehs.(lon1,lat1)
-            h1[:] = h1[:] + F[k,iic].*xc + F[k,iis].*xs
+            h1[:] = h1[:] + F[kk,iic].*xc + F[kk,iis].*xs
             if !isnothing(fhretuv)
                 xc = euc.(lon1,lat1)
                 xs = eus.(lon1,lat1)
-                u1[:] = u1[:] + F[k,iic].*xc + F[k,iis].*xs
+                u1[:] = u1[:] + F[kk,iic].*xc + F[kk,iis].*xs
                 xc = evc.(lon1,lat1)
                 xs = evs.(lon1,lat1)
-                v1[:] = v1[:] + F[k,iic].*xc + F[k,iis].*xs
+                v1[:] = v1[:] + F[kk,iic].*xc + F[kk,iis].*xs
             end
         end
     end
